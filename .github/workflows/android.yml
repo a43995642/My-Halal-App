@@ -14,12 +14,18 @@ jobs:
           node-version: 20
       - run: npm install
       - run: npm run build
-      - run: npx cap sync
+      
+      # هذا هو السطر السحري: نحذف القديم وننشئ جديداً
+      - run: |
+          rm -rf android
+          npx cap add android
+          
       - name: Build APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+          
       - uses: actions/upload-artifact@v4
         with:
           name: my-app-debug
