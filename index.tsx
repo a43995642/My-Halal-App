@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { Component, ReactNode } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
 interface ErrorBoundaryProps {
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
 interface ErrorBoundaryState {
@@ -12,8 +12,11 @@ interface ErrorBoundaryState {
 }
 
 // Simple Error Boundary Component to prevent white screen
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { hasError: false, error: null };
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  state: ErrorBoundaryState = {
+    hasError: false,
+    error: null
+  };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };

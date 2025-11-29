@@ -7,10 +7,26 @@ interface CameraProps {
 }
 
 export const Camera: React.FC<CameraProps> = ({ onCapture, onClose }) => {
-  const { videoRef, error, isCapturing, captureImage } = useCamera();
+  const { 
+    videoRef, 
+    error, 
+    isCapturing, 
+    captureImage,
+    hasTorch,
+    isTorchOn,
+    toggleTorch,
+    hasZoom,
+    zoomLevel,
+    maxZoom,
+    setZoom
+  } = useCamera();
 
   const handleTakePhoto = () => {
     captureImage(onCapture);
+  };
+
+  const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setZoom(parseFloat(e.target.value));
   };
 
   return (
@@ -38,7 +54,7 @@ export const Camera: React.FC<CameraProps> = ({ onCapture, onClose }) => {
       ) : (
         <>
           <div className="relative w-full h-full flex flex-col bg-black">
-             {/* Video Element - Important: muted and playsInline for mobile support */}
+             {/* Video Element */}
             <video 
               ref={videoRef} 
               autoPlay 
@@ -47,12 +63,31 @@ export const Camera: React.FC<CameraProps> = ({ onCapture, onClose }) => {
               className="w-full h-full object-cover"
             />
             
-            {/* Overlay Header with Safe Area Support */}
-            <div className="absolute top-[env(safe-area-inset-top)] left-0 right-0 p-4 mt-4 z-10 flex justify-end">
+            {/* Top Bar: Close & Flash */}
+            <div className="absolute top-[env(safe-area-inset-top)] left-0 right-0 p-4 mt-2 z-20 flex justify-between items-start px-6">
+               {/* Flash Toggle */}
+               {hasTorch ? (
+                 <button 
+                  onClick={toggleTorch}
+                  className={`p-3 rounded-full backdrop-blur-md transition active:scale-90 ${isTorchOn ? 'bg-yellow-400 text-yellow-900 shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 'bg-black/30 text-white'}`}
+                  aria-label="تبديل الفلاش"
+                 >
+                   {isTorchOn ? (
+                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                        <path fillRule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clipRule="evenodd" />
+                     </svg>
+                   ) : (
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                     </svg>
+                   )}
+                 </button>
+               ) : <div className="w-12"></div>}
+
                <button 
                 onClick={onClose}
                 disabled={isCapturing}
-                className="text-white p-3 rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition active:scale-90 disabled:opacity-0 disabled:pointer-events-none"
+                className="text-white p-3 rounded-full bg-black/30 backdrop-blur-md hover:bg-black/50 transition active:scale-90"
                 aria-label="إغلاق الكاميرا"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
@@ -61,10 +96,10 @@ export const Camera: React.FC<CameraProps> = ({ onCapture, onClose }) => {
               </button>
             </div>
 
-            {/* Guide Frame - Fades out during capture */}
+            {/* Guide Frame */}
             <div className={`absolute inset-0 pointer-events-none flex items-center justify-center transition-opacity duration-200 ${isCapturing ? 'opacity-0' : 'opacity-100'}`}>
                <div className="relative">
-                 {/* Main Frame Box - Transparent center */}
+                 {/* Main Frame Box */}
                  <div className="w-72 h-72 border-2 border-white/30 rounded-3xl relative bg-transparent shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
                    {/* Corners */}
                    <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-emerald-500 rounded-tl-2xl -mt-1 -ml-1 shadow-sm"></div>
@@ -73,16 +108,29 @@ export const Camera: React.FC<CameraProps> = ({ onCapture, onClose }) => {
                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-emerald-500 rounded-br-2xl -mb-1 -mr-1 shadow-sm"></div>
                  </div>
                  
-                 {/* Helper Text */}
-                 <div className="absolute -bottom-24 w-full text-center space-y-2">
-                    <p className="text-white font-bold text-lg shadow-black drop-shadow-md">ضع المكونات في الإطار</p>
-                    <p className="text-white/80 text-sm shadow-black drop-shadow-md bg-black/20 backdrop-blur-sm py-1 px-3 rounded-full inline-block">حاول تثبيت الكاميرا للدقة</p>
-                 </div>
+                 {/* Zoom Slider (Only if supported) */}
+                 {hasZoom && (
+                   <div className="absolute -bottom-28 w-full flex flex-col items-center pointer-events-auto">
+                      <div className="flex items-center gap-4 w-64 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full">
+                         <span className="text-white text-xs font-bold">1x</span>
+                         <input 
+                            type="range" 
+                            min="1" 
+                            max={maxZoom} 
+                            step="0.1" 
+                            value={zoomLevel} 
+                            onChange={handleZoomChange}
+                            className="w-full h-1 bg-gray-500 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                         />
+                         <span className="text-white text-xs font-bold">{Math.round(maxZoom)}x</span>
+                      </div>
+                   </div>
+                 )}
                </div>
             </div>
 
-            {/* Controls */}
-            <div className="absolute bottom-0 left-0 right-0 p-10 pb-[calc(2.5rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-black/90 via-black/50 to-transparent flex justify-center items-center z-10">
+            {/* Bottom Controls */}
+            <div className="absolute bottom-0 left-0 right-0 p-10 pb-[calc(2.5rem+env(safe-area-inset-bottom))] flex justify-center items-center z-10">
               <button 
                 onClick={handleTakePhoto}
                 disabled={isCapturing}

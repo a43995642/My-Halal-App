@@ -9,6 +9,13 @@ import { ScanResult, ScanHistoryItem, HalalStatus, IngredientDetail } from './ty
 // Constants
 const FREE_SCANS_LIMIT = 3;
 
+// Utility for Haptic Feedback
+const vibrate = (pattern: number | number[] = 10) => {
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    navigator.vibrate(pattern);
+  }
+};
+
 // Utility to compress images before sending to API or Sharing
 const compressImage = (base64Str: string, maxWidth = 800, quality = 0.6): Promise<string> => {
   return new Promise((resolve) => {
@@ -216,6 +223,7 @@ function App() {
   const handleOnboardingFinish = () => {
     localStorage.setItem('halalScannerTermsAccepted', 'true');
     setShowOnboarding(false);
+    vibrate(50);
   };
 
   const handleSubscribe = async () => {
@@ -224,6 +232,7 @@ function App() {
     localStorage.setItem('halalScannerIsPremium', 'true');
     setShowSubscriptionModal(false);
     showToast('تم تفعيل النسخة الكاملة بنجاح!');
+    vibrate([50, 100, 50]);
   };
 
   const incrementScanCount = () => {
@@ -267,9 +276,11 @@ function App() {
     setImage(item.thumbnail || null);
     setShowHistory(false);
     setError(null);
+    vibrate(20);
   };
 
   const handleShare = async () => {
+    vibrate(20);
     if (!result) return;
     
     const statusLabel = result.status === HalalStatus.HALAL ? 'حلال ✅' : 
@@ -336,6 +347,7 @@ function App() {
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    vibrate(20);
     if (e.target.files && e.target.files[0]) {
       if (!isPremium && scanCount >= FREE_SCANS_LIMIT) {
         setShowSubscriptionModal(true);
@@ -355,6 +367,7 @@ function App() {
         setResult(null);
         setIsLoading(false);
         setProgress(0);
+        vibrate(50); // Feedback on load
       };
       reader.readAsDataURL(file);
     }
@@ -369,6 +382,7 @@ function App() {
   };
 
   const openCamera = () => {
+    vibrate(20);
     if (!isPremium && scanCount >= FREE_SCANS_LIMIT) {
       setShowSubscriptionModal(true);
       return;
@@ -377,6 +391,7 @@ function App() {
   };
 
   const handleAnalyze = async () => {
+    vibrate(50); // Tactile click feel
     if (!isPremium && scanCount >= FREE_SCANS_LIMIT) {
       setShowSubscriptionModal(true);
       return;
@@ -412,11 +427,14 @@ function App() {
       setProgress(100);
       
       if (scanResult.status === 'NON_FOOD' && scanResult.reason.includes('خطأ')) {
+         vibrate([100, 50, 100]); // Error vibration
          if (scanResult.reason.includes('حجم الصورة') || scanResult.reason.includes('الشبكة')) {
            setUseLowQuality(true);
          }
          setError(scanResult.reason);
       } else {
+         // Success!
+         vibrate([50, 100]); 
          setResult(scanResult);
          incrementScanCount();
 
@@ -428,6 +446,7 @@ function App() {
       }
     } catch (err: any) {
       console.error("Analysis Error:", err);
+      vibrate([100, 50, 100]); // Error vibration
       if (progressInterval.current) clearInterval(progressInterval.current);
       
       let errorMessage = "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.";
@@ -446,6 +465,7 @@ function App() {
   };
 
   const resetApp = () => {
+    vibrate(20);
     setImage(null);
     setResult(null);
     setError(null);
