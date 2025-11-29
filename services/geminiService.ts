@@ -1,11 +1,7 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { HalalStatus, ScanResult } from "../types";
 
-// Retrieve API Key safely for both Node/CRA (process.env) and Vite (import.meta.env) environments
-// @ts-ignore: Handle both environment types
-const API_KEY = (typeof process !== 'undefined' && process.env?.API_KEY) || (import.meta as any).env?.VITE_API_KEY;
-
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+// Note: API Key retrieval logic moved inside analyzeImage to prevent module-level crashes on startup
 
 const responseSchema: Schema = {
   type: Type.OBJECT,
@@ -159,14 +155,21 @@ export const analyzeImage = async (
   enableImageDownscaling: boolean = false
 ): Promise<ScanResult> => {
   
+  // Retrieve API Key safely for both Node/CRA (process.env) and Vite (import.meta.env) environments
+  // @ts-ignore: Handle both environment types
+  const API_KEY = (typeof process !== 'undefined' && process.env?.API_KEY) || (import.meta as any).env?.VITE_API_KEY;
+
   if (!API_KEY) {
     return {
       status: HalalStatus.NON_FOOD,
-      reason: "مفتاح API غير موجود. يرجى التأكد من إعدادات المشروع (ملف .env).",
+      reason: "مفتاح API غير موجود. يرجى التأكد من إعدادات المشروع (ملف .env) أو إعدادات التطبيق.",
       ingredientsDetected: [],
       confidence: 0,
     };
   }
+
+  // Initialize client here to avoid startup crashes
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
 
   let processedImage = base64Image;
 

@@ -1,7 +1,7 @@
 {
   "name": "Halal Scanner",
   "short_name": "HalalScan",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#059669",
